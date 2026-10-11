@@ -9,6 +9,7 @@
     ../../modules/personal.nix
     ../../modules/gaming.nix
     ../../modules/dev.nix
+    ../../modules/android.nix
     ../../modules/ai.nix
     ../../modules/school.nix
   ];

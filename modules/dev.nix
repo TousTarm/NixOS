@@ -9,6 +9,5 @@
   environment.systemPackages = with pkgs; [
     nodejs_22
     postgresql  # kvůli klientovi psql
-    android-tools  # adb, fastboot
   ];
 }
