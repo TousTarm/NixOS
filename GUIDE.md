@@ -25,6 +25,9 @@ Klíčové pojmy:
   8. 10. při problému s uspáním.
 - **Flake**: `flake.nix` říká, odkud se berou balíčky (nixpkgs) a jaké počítače existují.
   `flake.lock` zamyká přesnou verzi nixpkgs. Systém se tedy nezmění, dokud sám nespustíš `update`.
+- **Dva zdroje balíčků**: `nixpkgs` (stabilní `nixos-26.05`) pro celý systém. Verze programů tam
+  stojí a chodí jen opravy. `nixpkgs-unstable` jen pro programy, které na stabilní větvi rychle
+  zastarávají (teď Cursor). Viz recept „Program je moc stará verze“.
 - **Modul**: každý `.nix` soubor v `modules/` je modul, který nastavuje **volby**
   (`services.X.enable = true;`). NixOS všechny moduly sloučí:
   - seznamy se spojí, takže `environment.systemPackages` může být v každém modulu
@@ -38,8 +41,8 @@ Klíčové pojmy:
 ## 2. Struktura
 
 ```
-flake.nix                     vstupní bod: nixpkgs + seznam počítačů (mkHost)
-flake.lock                    zamčená verze nixpkgs (needitovat ručně)
+flake.nix                     vstupní bod: nixpkgs (+ unstable) + seznam počítačů (mkHost)
+flake.lock                    zamčené verze nixpkgs a unstable (needitovat ručně)
 hosts/
   desktop/
     default.nix               tenhle počítač: boot, GPU, hardwarové fixy + VÝBĚR MODULŮ
@@ -57,7 +60,7 @@ modules/
   personal.nix                osobní věci, složka Projects
   gaming.nix                  Steam, Heroic, CurseForge
   dev.nix                     git, node, psql
-  ai.nix                      Claude Code (podpora), Antigravity, Cursor
+  ai.nix                      Claude Code (podpora), Antigravity, Cursor (z unstable)
   school.nix                  Oxygen XML Editor, složka School
 pkgs/                         vlastní balíčky (co není v nixpkgs)
   oxygen-xml-editor.nix
@@ -76,13 +79,51 @@ flake.nix
                               ├─ modules/gaming.nix   │ podle toho, co
                               ├─ modules/school.nix   │ na tom počítači chci
                               └─ ...                  ┘
+
+personal.nix ─┐
+school.nix   ─┼─ import ./nextcloud.nix + nextcloud.folders = [ ... ]
 ```
+
+Modul se vypíná tak, že jeho řádek v `hosts/desktop/default.nix` zakomentuješ (`#`). Soubor
+zůstane a zapneš ho odkomentováním.
 
 Pravidlo: **modul = téma, host = výběr témat + hardware.** Notebook pak třeba vynechá `gaming.nix`
 a nemá Nvidii, ale `core/`, `plasma.nix` a `school.nix` sdílí s desktopem.
 
 `mkHost` ve `flake.nix` posílá každému modulu argument `host` (jméno configu, např. `"desktop"`).
 Používá ho `core/shell.nix`, aby aliasy na každém počítači sestavily správný config.
+
+### Jak fungují jednotlivé části
+
+**Tailscale** (`core/tailscale.nix`): zapne službu a otevře firewall. Navíc nastavuje
+WireGuard). Na novém počítači se jednou přihlásíš: `sudo tailscale up`.
+
+**Nextcloud** (`nextcloud.nix`) je společný základ, který sám nic nesynchronizuje:
+- nainstaluje desktop aplikaci Nextcloud,
+- vytvoří `~/.config/Nextcloud/sync-exclude.lst` = co se nikdy nesynchronizuje (`node_modules/`,
+  `venv/`, `__pycache__/`, ...). Platí pro všechny složky. Měň ho v modulu, ne v aplikaci, protože
+  změny v aplikaci se neuloží,
+- přidá vlastní volbu `nextcloud.folders`. Pro každou složku v ní vytvoří `~/<složka>` a odkaz
+  na ploše. Seznamy z různých modulů se spojí (teď `[ "Projects" "School" ]`).
+
+Které složky se párují se serverem, Nix neřídí. To je uložené v aplikaci Nextcloud
+(`~/.config/Nextcloud/nextcloud.cfg`) a naklikává se ručně (viz recept „Nová synchronizovaná složka“).
+Aplikace se po přihlášení spouští sama (zaškrtnuto v jejím nastavení).
+
+| Lokálně | Server | Modul |
+|---|---|---|
+| `~/Projects` | `/Projects` | `personal.nix` |
+| `~/School` | `/School` | `school.nix` |
+
+obnovit pracovní prostředí na jiném zařízení. Proto:
+  - `repos.tsv`: seznam repozitářů (cesta, URL `origin`, aktuální větev),
+  - `files/`: jen IDE kontext (`.vscode/`, `.idea/`, `.cursor/`, `.claude/`, `CLAUDE.md`,
+    `AGENTS.md`, ...), seznam je v `ideContext` na začátku modulu.
+  repa a vrátí do nich IDE kontext.
+
+**Cursor z unstable** (`ai.nix`): na začátku modulu se načte `nixpkgs-unstable`
+(`unstable = import inputs.nixpkgs-unstable { ... }`) a v seznamu balíčků je pak
+`unstable.code-cursor`. `inputs` přichází z `flake.nix` stejně jako `host`.
 
 ---
 
@@ -142,6 +183,25 @@ Od nejčistšího po nejšpinavější:
 3. **Ruční binárka + `nix-ld`.** Takhle běží Claude Code. Funguje, ale je mimo config: na novém
    počítači ji musíš nainstalovat znovu ručně.
 
+### Program je moc stará verze
+
+Stabilní větev (`nixos-26.05`) drží verze programů, které se rychle vyvíjejí (editory, AI nástroje),
+často na stavu z doby vydání. `update` to nespraví, protože jen posune stabilní větev.
+
+1. Porovnej verze:
+   `nix eval --raw nixpkgs#jmeno.version` a `nix eval --raw github:NixOS/nixpkgs/nixos-unstable#jmeno.version`
+2. Pokud je unstable novější, vezmi balíček odtud. V modulu přidej na začátek `let unstable = ...`
+   (zkopíruj z `ai.nix`) a v seznamu napiš `unstable.jmeno` místo `jmeno`.
+3. `rebuild`. `update` pak posouvá i unstable, takže program se bude aktualizovat s ním.
+
+### Nová synchronizovaná složka (Nextcloud)
+
+1. Do správného modulu přidej název do `nextcloud.folders`, např. `nextcloud.folders = [ "Projects" "Documents" ];`.
+   Pokud modul ještě nemá `imports = [ ./nextcloud.nix ];`, přidej i to.
+2. `rebuild` vytvoří `~/Documents` a odkaz na ploše.
+3. V aplikaci Nextcloud: **Přidat synchronizaci složky** → `~/Documents` → na serveru vyber nebo
+   vytvoř `/Documents`. Na serveru nic předem zakládat nemusíš.
+
 ### Aktualizovat vlastní balíček (Oxygen, CurseForge)
 
 1. V `pkgs/xyz.nix` změň `version` (a URL, pokud v ní verze je).
@@ -200,7 +260,12 @@ V `modules/core/shell.nix`:
 ### Není ideální / TODO ⚠️
 - **Hostname `nixos` ≠ jméno configu `desktop`.** Aliasy to obchází přes `-H desktop`. Hostname
   byl vrácen kvůli problému s přihlášením 8. 10. Pokud se ukáže, že za to nemohl, je čistší ho
-  sjednotit na `desktop`.
+  sjednotit na `desktop`. **Pozor:** každá změna hostname může rozbít Chromium/Electron aplikace
+  (viz „Když něco nejde“).
+- **Git a rebuild nikdy pod `sudo`.** Soubory v `~/NixOS` pak patří rootovi a nejde do nich
+  zapisovat (stalo se 11. 10.). `rebuild` si o heslo řekne sám.
+  a `wireguard-tools`. Ve stínu zatím nejsou žádná data.
+- **Párování složek v Nextcloudu není v configu.** Na novém počítači se musí naklikat znovu.
 - **CurseForge má jen URL „latest“.** Po vydání nové verze přestane sedět hash a **celý rebuild
   selže**. Pak postupuj podle „Aktualizovat vlastní balíček“. Alternativa bez tohohle problému je
   Prism Launcher (`prismlauncher` v nixpkgs), který umí i CurseForge modpacky.
@@ -227,6 +292,14 @@ V `modules/core/shell.nix`:
   neexistuje. `has an unsupported value` / `defined multiple times` = dva moduly nastavují totéž.
   Víc detailů ukáže `rebuild --show-trace`.
 - **„path ... does not exist“** u nového souboru → zapomenutý `git add`.
+- **„Permission denied“ na `flake.lock` nebo v `.git`** → git nebo Nix běžel pod
+  sudo. Oprava: `sudo chown -R toust:users ~/NixOS`.
+- **Aplikace (Spotify, Discord, Cursor, ...) se po spuštění hned zavře** a předtím se měnil
+  hostname → v její složce zůstal zámek se starým jménem počítače. Najdi ho:
+  `find ~/.config ~/.cache -maxdepth 4 -name SingletonLock -printf '%p -> %l\n'`.
+  Když aplikace neběží, smaž `SingletonLock`, `SingletonSocket` a `SingletonCookie` vedle něj.
+- **Nextcloud nesynchronizuje** → ikona v liště ukáže chybu. Konflikty se ukládají jako
+  `soubor (conflicted copy ...)` vedle originálu.
 - **Po rebuildu něco nefunguje** → `sudo nixos-rebuild switch --rollback` nebo starší generace
   v boot menu. Pak v klidu hledat chybu.
 - **Jaká je aktuální hodnota volby?**
@@ -246,3 +319,6 @@ V `modules/core/shell.nix`:
 | 8. 10. | myš dál občas nereagovala | USB 3 disk WD Elements ruší 2,4 GHz dongle | disk dál od dongle |
 | 8. 10. | PC se neprobudilo z uspání | Nvidia bez `powerManagement` neukládá VRAM | `hardware.nvidia.powerManagement.enable` |
 | 8. 10. | černá obrazovka 30 s při loginu, freeze po re-loginu | race v SDDM při předávání VT (Nvidia), příčina nepotvrzená | hostname zpět na `nixos`. Kdyby se vrátilo: `services.displayManager.sddm.wayland.enable = false` |
+| 11. 10. | git a `nix flake lock` hlásí Permission denied | `.git/objects/e6` a `flake.lock` patřily rootovi (git/Nix pod sudo) | `sudo chown -R toust:users ~/NixOS` |
+| 11. 10. | Cursor hlásí „very old version“ | stabilní nixpkgs drží Cursor na 3.5, `update` nepomůže | Cursor z `nixpkgs-unstable` (3.24) |
+| 11. 10. | Spotify se po spuštění hned zavře | po rebuildu se hostname změnil `desktop` → `nixos`, v `~/.cache/spotify/SingletonLock` zůstal zámek se starým jménem | zámek smazán |
