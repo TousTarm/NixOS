@@ -3,6 +3,8 @@
 
   # Odkud bereme balíčky. Přesná verze je zamčená ve flake.lock (aktualizace: `update`).
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+  # Nejnovější balíčky pro programy, které na stabilní větvi rychle zastarávají (Cursor, ...)
+  inputs.nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
   outputs = { nixpkgs, ... }@inputs:
     let

@@ -1,5 +1,12 @@
 # AI nástroje na programování
-{ pkgs, ... }: {
+{ inputs, pkgs, ... }:
+let
+  # Balíčky z nixos-unstable (verze zamčená ve flake.lock, posune ji `update`)
+  unstable = import inputs.nixpkgs-unstable {
+    system = pkgs.stdenv.hostPlatform.system;
+    config.allowUnfree = true;
+  };
+in {
   # Claude Code se instaluje NATIVNÍM instalátorem (sám se aktualizuje, nixpkgs verze zaostává):
   #   curl -fsSL https://claude.ai/install.sh | bash
   # Binárka skončí v ~/.local/bin a je předkompilovaná pro "normální" Linux, proto:
@@ -8,6 +15,6 @@
 
   environment.systemPackages = with pkgs; [
     antigravity   # Google Antigravity
-    code-cursor   # Cursor
+    unstable.code-cursor   # Cursor ze stabilní větve je moc starý
   ];
 }

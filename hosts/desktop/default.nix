@@ -6,11 +6,11 @@
     ../../modules/core             # základ pro všechny počítače
     ../../modules/plasma.nix
     ../../modules/apps.nix
+    ../../modules/personal.nix
     ../../modules/gaming.nix
     ../../modules/dev.nix
     ../../modules/ai.nix
     ../../modules/school.nix
-    ../../modules/work.nix
   ];
 
   networking.hostName = "nixos";  # změna na "desktop" (8. 10.) se kryla s problémy při přihlášení, proto zpět

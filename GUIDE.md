@@ -54,10 +54,11 @@ modules/
     tailscale.nix               Tailscale VPN (po instalaci: sudo tailscale up)
   plasma.nix                  KDE Plasma, zvuk, síť, tisk
   apps.nix                    běžné aplikace (Firefox, Discord, Spotify, ...)
+  personal.nix                osobní věci, složka Projects
   gaming.nix                  Steam, Heroic, CurseForge
   dev.nix                     git, node, psql
   ai.nix                      Claude Code (podpora), Antigravity, Cursor
-  school.nix                  Oxygen XML Editor
+  school.nix                  Oxygen XML Editor, složka School
 pkgs/                         vlastní balíčky (co není v nixpkgs)
   oxygen-xml-editor.nix
   curseforge.nix
