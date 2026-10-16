@@ -140,6 +140,10 @@ Aliasy jsou definované v `modules/core/shell.nix`.
 | `nix shell nixpkgs#htop` | program jen dočasně vyzkoušet, zmizí po zavření shellu |
 | `sudo nixos-rebuild switch --rollback` | vrátit se o generaci zpět |
 
+Shell je **zsh** (`core/shell.nix`): zvýrazňuje příkazy, našeptává z historie (přijmeš šipkou →)
+a má prompt powerlevel10k. Vzhled nastavíš `p10k configure` a v terminálu je potřeba font
+„MesloLGS Nerd Font“.
+
 `nh` před přepnutím ukáže, které balíčky přibudou nebo zmizí. Jednou týdně sám uklidí generace
 starší než 14 dní (vždy jich nechá aspoň 5).
 

@@ -13,6 +13,21 @@ in {
     generations  = "nixos-rebuild list-generations";
   };
 
+  # Zsh pro všechny počítače: zelené/červené příkazy, našeptávač z historie, powerlevel10k.
+  # Vzhled promptu nastavíš `p10k configure` (uloží ~/.p10k.zsh).
+  programs.zsh = {
+    enable = true;
+    syntaxHighlighting.enable = true;   # platný příkaz zeleně, neplatný červeně
+    autosuggestions.enable = true;      # šedý návrh z historie, přijmeš šipkou →
+    histSize = 10000;
+    promptInit = ''
+      source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
+      [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+    '';
+  };
+  # Ikony v powerlevel10k potřebují Nerd Font (v terminálu nastav "MesloLGS Nerd Font").
+  fonts.packages = [ pkgs.nerd-fonts.meslo-lg ];
+
   # Delší příkaz jako skript: `nixdiff` ukáže, co se změnilo mezi posledními dvěma generacemi.
   environment.systemPackages = [
     (pkgs.writeShellScriptBin "nixdiff" ''
