@@ -43,6 +43,8 @@ Klíčové pojmy:
 ```
 flake.nix                     vstupní bod: nixpkgs (+ unstable) + seznam počítačů (mkHost)
 flake.lock                    zamčené verze nixpkgs a unstable (needitovat ručně)
+RULES.md                      pravidla (jen commitnutý config, nic nedodělaného); CLAUDE.md je načítá
+TODO.md                       nedodělané věci a dočasná řešení
 hosts/
   desktop/
     default.nix               tenhle počítač: boot, GPU, hardwarové fixy + VÝBĚR MODULŮ
@@ -53,7 +55,7 @@ modules/
     nix.nix                     nastavení Nixu, nh, automatický úklid
     locale.nix                  čas, jazyk, klávesnice
     users.nix                   uživatel toust
-    shell.nix                   aliasy a vlastní příkazy
+    shell.nix                   zsh, aliasy a vlastní příkazy
     tailscale.nix               Tailscale VPN (po instalaci: sudo tailscale up)
   plasma.nix                  KDE Plasma, zvuk, síť, tisk
   apps.nix                    běžné aplikace (Firefox, Discord, Spotify, ...)
@@ -131,8 +133,8 @@ Aliasy jsou definované v `modules/core/shell.nix`.
 
 | Příkaz | Co dělá |
 |---|---|
-| `rebuild` | sestaví config a přepne na něj (`nh os switch`) |
-| `rebuild-test` | přepne, ale po restartu se vrátí zpět. Na zkoušení |
+| `rebuild` | sestaví config a přepne na něj (`nh os switch`). Jen s commitnutým configem |
+| `rebuild-test` | přepne, ale po restartu se vrátí zpět. Na zkoušení, jde i bez commitu |
 | `rebuild-boot` | nová generace se použije až po restartu. Bezpečnější u velkých změn (GPU, login) |
 | `update` | aktualizuje nixpkgs (`flake.lock`) a přepne |
 | `nixcfg` | `cd ~/NixOS` |
@@ -148,11 +150,15 @@ a má prompt powerlevel10k. Vzhled nastavíš `p10k configure` a v terminálu je
 `nh` před přepnutím ukáže, které balíčky přibudou nebo zmizí. Jednou týdně sám uklidí generace
 starší než 14 dní (vždy jich nechá aspoň 5).
 
-**Po každé fungující změně commitni:**
+**Postup každé změny** (podrobně v [RULES.md](RULES.md)):
 
 ```bash
-git add -A && git commit -m "přidán X"
+rebuild-test                              # vyzkoušej (po restartu se vrátí)
+git add -A && git commit -m "přidán X"    # funguje → commit
+rebuild && git push                       # natrvalo; na ostatních PC: git pull && rebuild
 ```
+
+Nedodělané věci nepatří do aktivního configu, ale do [TODO.md](TODO.md).
 
 ---
 
@@ -169,7 +175,7 @@ git add -A && git commit -m "přidán X"
      obs-studio
    ];
    ```
-4. `rebuild`
+4. `rebuild-test`, vyzkoušej, commit, `rebuild`
 
 ### Přidat program, který v nixpkgs NENÍ
 
@@ -194,13 +200,13 @@ Stabilní větev (`nixos-26.05`) drží verze programů, které se rychle vyvíj
    `nix eval --raw nixpkgs#jmeno.version` a `nix eval --raw github:NixOS/nixpkgs/nixos-unstable#jmeno.version`
 2. Pokud je unstable novější, vezmi balíček odtud. V modulu přidej na začátek `let unstable = ...`
    (zkopíruj z `ai.nix`) a v seznamu napiš `unstable.jmeno` místo `jmeno`.
-3. `rebuild`. `update` pak posouvá i unstable, takže program se bude aktualizovat s ním.
+3. `rebuild-test`, commit, `rebuild`. `update` pak posouvá i unstable, takže program se bude aktualizovat s ním.
 
 ### Nová synchronizovaná složka (Nextcloud)
 
 1. Do správného modulu přidej název do `nextcloud.folders`, např. `nextcloud.folders = [ "Projects" "Documents" ];`.
    Pokud modul ještě nemá `imports = [ ./nextcloud.nix ];`, přidej i to.
-2. `rebuild` vytvoří `~/Documents` a odkaz na ploše.
+2. `rebuild-test` (pak commit a `rebuild`) vytvoří `~/Documents` a odkaz na ploše.
 3. V aplikaci Nextcloud: **Přidat synchronizaci složky** → `~/Documents` → na serveru vyber nebo
    vytvoř `/Documents`. Na serveru nic předem zakládat nemusíš.
 
@@ -208,8 +214,8 @@ Stabilní větev (`nixos-26.05`) drží verze programů, které se rychle vyvíj
 
 1. V `pkgs/xyz.nix` změň `version` (a URL, pokud v ní verze je).
 2. Nastav `hash = "";`
-3. `rebuild` → build selže s hláškou `got: sha256-...`
-4. Ten hash zkopíruj do `hash = "..."` a dej `rebuild` znovu.
+3. `rebuild-test` → build selže s hláškou `got: sha256-...`
+4. Ten hash zkopíruj do `hash = "..."`, `rebuild-test` znovu, pak commit a `rebuild`.
 
 ### Nový modul
 
@@ -222,7 +228,7 @@ Stabilní větev (`nixos-26.05`) drží verze programů, které se rychle vyvíj
    ```
 2. `git add modules/neco.nix` (jinak ho flake nevidí!)
 3. Přidej `../../modules/neco.nix` do `imports` v `hosts/<pocitac>/default.nix`.
-4. `rebuild`
+4. `rebuild-test`, vyzkoušej, commit, `rebuild`
 
 ### Nový alias / příkaz
 
@@ -259,11 +265,9 @@ V `modules/core/shell.nix`:
 - **Automatický úklid** starých generací (`nh clean`).
 - Hardwarové fixy (Nvidia, fwupd) jsou u hosta, ne ve sdílených modulech.
 
-### Není ideální / TODO ⚠️
-- **Hostname `nixos` ≠ jméno configu `desktop`.** Aliasy to obchází přes `-H desktop`. Hostname
-  byl vrácen kvůli problému s přihlášením 8. 10. Pokud se ukáže, že za to nemohl, je čistší ho
-  sjednotit na `desktop`. **Pozor:** každá změna hostname může rozbít Chromium/Electron aplikace
-  (viz „Když něco nejde“).
+### Není ideální ⚠️
+Konkrétní úkoly jsou v [TODO.md](TODO.md).
+- **Hostname `nixos` ≠ jméno configu `desktop`.** Aliasy to obchází přes `-H desktop`.
 - **Git a rebuild nikdy pod `sudo`.** Soubory v `~/NixOS` pak patří rootovi a nejde do nich
   zapisovat (stalo se 11. 10.). `rebuild` si o heslo řekne sám.
 - **Párování složek v Nextcloudu není v configu.** Na novém počítači se musí naklikat znovu.
@@ -273,13 +277,9 @@ V `modules/core/shell.nix`:
 - **Oxygen běží bez JavaFX.** Pár funkcí (náhledy přes webový engine) nemusí fungovat.
 - **Claude Code je mimo config** (nativní instalátor kvůli auto-updatu, nixpkgs verze zaostává).
   Na každém počítači se instaluje ručně.
-- **`~/.config/plasma-workspace/env/cursor-test.sh`** (softwarový kurzor) je dočasný pokus
-  mimo config. Myš ve skutečnosti rušil disk, takže ho smaž.
 - **Žádný home-manager.** Nastavení v home (dotfiles, bash, KDE, git) není v configu. Další velký
   krok, až budeš chtít.
 - **Všechno je systémové** (`environment.systemPackages`). Pro jednoho uživatele to nevadí.
-- **`services.xserver.enable`** nejspíš není potřeba (Plasma běží na Waylandu). Nechávám to, dokud
-  to nebude ověřené.
 - **Do repa nikdy nedávej hesla ani tokeny.** Všechno z configu skončí v `/nix/store`, který může
   číst každý uživatel. Na tajnosti se používá `sops-nix` nebo `agenix`.
 - **Upgrade NixOS** (např. na 26.11) znamená změnit `nixos-26.05` ve `flake.nix`. `stateVersion`

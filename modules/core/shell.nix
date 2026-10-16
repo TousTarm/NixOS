@@ -3,12 +3,14 @@
 { host, pkgs, ... }:
 let
   flake = "/home/toust/NixOS";
+  # natrvalo se přepíná jen na commitnutý config (viz RULES.md); zkoušet jde přes rebuild-test
+  clean = ''[ -z "$(git -C ${flake} status --porcelain)" ] || { echo "~/NixOS má necommitnuté změny: vyzkoušej rebuild-test, pak commit (viz RULES.md)"; false; } &&'';
 in {
   environment.shellAliases = {
-    rebuild      = "nh os switch -H ${host}";        # sestav a přepni
-    rebuild-boot = "nh os boot -H ${host}";          # přepni až po restartu (bezpečnější u velkých změn)
-    rebuild-test = "nh os test -H ${host}";          # vyzkoušej, po restartu zpět
-    update       = "nh os switch -H ${host} --update"; # aktualizuj nixpkgs (flake.lock) + přepni
+    rebuild      = "${clean} nh os switch -H ${host}";        # sestav a přepni
+    rebuild-boot = "${clean} nh os boot -H ${host}";          # přepni až po restartu (bezpečnější u velkých změn)
+    rebuild-test = "nh os test -H ${host}";                   # vyzkoušej (i necommitnuté), po restartu zpět
+    update       = "${clean} nh os switch -H ${host} --update"; # aktualizuj nixpkgs (flake.lock) + přepni
     nixcfg       = "cd ${flake}";
     generations  = "nixos-rebuild list-generations";
   };
