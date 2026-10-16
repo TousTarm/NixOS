@@ -58,6 +58,7 @@ modules/
   plasma.nix                  KDE Plasma, zvuk, síť, tisk
   apps.nix                    běžné aplikace (Firefox, Discord, Spotify, ...)
   personal.nix                osobní věci, složka Projects
+  nextcloud.nix               Nextcloud klient + volba nextcloud.folders (importují ho personal/school)
   gaming.nix                  Steam, Heroic, CurseForge
   dev.nix                     git, node, psql
   ai.nix                      Claude Code (podpora), Antigravity, Cursor (z unstable)
@@ -80,8 +81,8 @@ flake.nix
                               ├─ modules/school.nix   │ na tom počítači chci
                               └─ ...                  ┘
 
-personal.nix ─┐
-school.nix   ─┼─ import ./nextcloud.nix + nextcloud.folders = [ ... ]
+personal.nix ─┬─ import ./nextcloud.nix + nextcloud.folders = [ ... ]
+school.nix   ─┘  (nextcloud.nix se načte jen jednou, i když ho importuje víc modulů)
 ```
 
 Modul se vypíná tak, že jeho řádek v `hosts/desktop/default.nix` zakomentuješ (`#`). Soubor
@@ -116,11 +117,6 @@ Aplikace se po přihlášení spouští sama (zaškrtnuto v jejím nastavení).
 | `~/Projects` | `/Projects` | `personal.nix` |
 | `~/School` | `/School` | `school.nix` |
 
-obnovit pracovní prostředí na jiném zařízení. Proto:
-  - `repos.tsv`: seznam repozitářů (cesta, URL `origin`, aktuální větev),
-  - `files/`: jen IDE kontext (`.vscode/`, `.idea/`, `.cursor/`, `.claude/`, `CLAUDE.md`,
-    `AGENTS.md`, ...), seznam je v `ideContext` na začátku modulu.
-  repa a vrátí do nich IDE kontext.
 
 **Cursor z unstable** (`ai.nix`): na začátku modulu se načte `nixpkgs-unstable`
 (`unstable = import inputs.nixpkgs-unstable { ... }`) a v seznamu balíčků je pak
@@ -265,7 +261,6 @@ V `modules/core/shell.nix`:
   (viz „Když něco nejde“).
 - **Git a rebuild nikdy pod `sudo`.** Soubory v `~/NixOS` pak patří rootovi a nejde do nich
   zapisovat (stalo se 11. 10.). `rebuild` si o heslo řekne sám.
-  a `wireguard-tools`. Ve stínu zatím nejsou žádná data.
 - **Párování složek v Nextcloudu není v configu.** Na novém počítači se musí naklikat znovu.
 - **CurseForge má jen URL „latest“.** Po vydání nové verze přestane sedět hash a **celý rebuild
   selže**. Pak postupuj podle „Aktualizovat vlastní balíček“. Alternativa bez tohohle problému je

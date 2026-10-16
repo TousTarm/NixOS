@@ -1,4 +1,5 @@
 # Základ pro synchronizaci s vlastním Nextcloud serverem (oficiální desktop klient).
+# Sám nic nesynchronizuje. Složky si přidávají tematické moduly (personal.nix,
 # school.nix) přes vlastní volbu `nextcloud.folders`, např.:
 #
 #   imports = [ ./nextcloud.nix ];
