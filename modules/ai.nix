@@ -16,5 +16,6 @@ in {
   environment.systemPackages = with pkgs; [
     antigravity   # Google Antigravity
     unstable.code-cursor   # Cursor ze stabilní větve je moc starý
+    wl-clipboard  # wl-paste: Claude Code přes něj čte obrázky ze schránky (Ctrl+V)
   ];
 }

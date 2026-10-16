@@ -120,7 +120,8 @@ Aplikace se po přihlášení spouští sama (zaškrtnuto v jejím nastavení).
 
 **Cursor z unstable** (`ai.nix`): na začátku modulu se načte `nixpkgs-unstable`
 (`unstable = import inputs.nixpkgs-unstable { ... }`) a v seznamu balíčků je pak
-`unstable.code-cursor`. `inputs` přichází z `flake.nix` stejně jako `host`.
+`unstable.code-cursor`. `inputs` přichází z `flake.nix` stejně jako `host`. Je tam i
+`wl-clipboard`, přes který Claude Code vkládá obrázky ze schránky (Ctrl+V).
 
 ---
 
