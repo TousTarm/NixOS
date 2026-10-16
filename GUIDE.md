@@ -97,6 +97,7 @@ Používá ho `core/shell.nix`, aby aliasy na každém počítači sestavily spr
 
 **Tailscale** (`core/tailscale.nix`): zapne službu a otevře firewall. Navíc nastavuje
 WireGuard). Na novém počítači se jednou přihlásíš: `sudo tailscale up`.
+a vypnuté subnet routy, exit node a Tailscale SSH (`extraSetFlags`).
 
 **Nextcloud** (`nextcloud.nix`) je společný základ, který sám nic nesynchronizuje:
 - nainstaluje desktop aplikaci Nextcloud,
