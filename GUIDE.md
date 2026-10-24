@@ -58,7 +58,7 @@ modules/
     shell.nix                   zsh, aliasy a vlastní příkazy
     tailscale.nix               Tailscale VPN (po instalaci: sudo tailscale up)
   plasma.nix                  KDE Plasma, zvuk, síť, tisk
-  apps.nix                    běžné aplikace (Firefox, Discord, Spotify, ...)
+  apps.nix                    běžné aplikace (Firefox, Discord, Spotify, VLC, LibreOffice, OBS, ...)
   personal.nix                osobní věci, složka Projects
   nextcloud.nix               Nextcloud klient + volba nextcloud.folders (importují ho personal/school)
   gaming.nix                  Steam, Heroic, CurseForge
