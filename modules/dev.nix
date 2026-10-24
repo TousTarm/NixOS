@@ -9,5 +9,6 @@
   environment.systemPackages = with pkgs; [
     nodejs_22
     postgresql  # kvůli klientovi psql
+    python3
   ];
 }
