@@ -5,6 +5,8 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
   # Nejnovější balíčky pro programy, které na stabilní větvi rychle zastarávají (Cursor, ...)
   inputs.nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+  # Soukromá část configu (soukromé repo, stahuje se přes SSH, viz GUIDE.md)
+  inputs.work.url = "git+ssh://git@github.com/TousTarm/nixos-work";
 
   outputs = { nixpkgs, ... }@inputs:
     let

@@ -35,7 +35,23 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
-        "nixpkgs-unstable": "nixpkgs-unstable"
+        "nixpkgs-unstable": "nixpkgs-unstable",
+        "work": "work"
+      }
+    },
+    "work": {
+      "locked": {
+        "lastModified": 1793056951,
+        "narHash": "sha256-CCG90ruP7436Pp+ecF6IlVfuV4Bnij7PWWbNksG5vN4=",
+        "ref": "refs/heads/main",
+        "rev": "770a30cc4e04d9af078a7794091637a6d315b700",
+        "revCount": 1,
+        "type": "git",
+        "url": "ssh://git@github.com/TousTarm/nixos-work"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/TousTarm/nixos-work"
       }
     }
   },

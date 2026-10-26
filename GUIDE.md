@@ -41,7 +41,7 @@ Klíčové pojmy:
 ## 2. Struktura
 
 ```
-flake.nix                     vstupní bod: nixpkgs (+ unstable) + seznam počítačů (mkHost)
+flake.nix                     vstupní bod: nixpkgs (+ unstable, + soukromý input work) + seznam počítačů (mkHost)
 flake.lock                    zamčené verze nixpkgs a unstable (needitovat ručně)
 RULES.md                      pravidla (jen commitnutý config, nic nedodělaného); CLAUDE.md je načítá
 TODO.md                       nedodělané věci a dočasná řešení
@@ -68,7 +68,6 @@ modules/
 pkgs/                         vlastní balíčky (co není v nixpkgs)
   oxygen-xml-editor.nix
   curseforge.nix
-certs/                        certifikáty
 ```
 
 **Jak to do sebe zapadá:**
@@ -99,7 +98,9 @@ Používá ho `core/shell.nix`, aby aliasy na každém počítači sestavily spr
 ### Jak fungují jednotlivé části
 
 **Tailscale** (`core/tailscale.nix`): zapne službu a otevře firewall. Navíc nastavuje
+`checkReversePath = "loose"`, protože jinak firewall zahazuje pakety z VPN (Tailscale i
 WireGuard). Na novém počítači se jednou přihlásíš: `sudo tailscale up`.
+Je zapnuté `--shields-up` (nikdo z tailnetu se k počítači nepřipojí, ven to jde normálně)
 a vypnuté subnet routy, exit node a Tailscale SSH (`extraSetFlags`).
 
 **Nextcloud** (`nextcloud.nix`) je společný základ, který sám nic nesynchronizuje:
@@ -119,6 +120,10 @@ Aplikace se po přihlášení spouští sama (zaškrtnuto v jejím nastavení).
 | `~/Projects` | `/Projects` | `personal.nix` |
 | `~/School` | `/School` | `school.nix` |
 
+**Soukromá část** (`inputs.work`): co nemá být veřejné, je v soukromém repu `TousTarm/nixos-work`
+(vlastní README s podrobnostmi). Flake ho stahuje přes SSH (`git+ssh://...`), takže každý počítač
+potřebuje SSH klíč s přístupem k GitHubu. Host ho importuje jako `inputs.work.nixosModules.default`.
+Po změně v soukromém repu: push, pak tady `nix flake update work` a commit `flake.lock`.
 
 **Cursor z unstable** (`ai.nix`): na začátku modulu se načte `nixpkgs-unstable`
 (`unstable = import inputs.nixpkgs-unstable { ... }`) a v seznamu balíčků je pak
@@ -241,15 +246,16 @@ V `modules/core/shell.nix`:
 ### Nový počítač (např. notebook)
 
 1. Na notebooku nainstaluj NixOS z ISO (grafický instalátor stačí).
-2. Naklonuj repo: `git clone <repo> ~/NixOS`
+2. Nastav SSH klíč pro GitHub (soukromý input `work` se stahuje přes SSH) a naklonuj repo:
+   `git clone <repo> ~/NixOS`
 3. `mkdir hosts/laptop && cp /etc/nixos/hardware-configuration.nix hosts/laptop/`
 4. Vytvoř `hosts/laptop/default.nix` podle desktopu:
    - bez Nvidie a fwupd fixu (to je hardware desktopu),
    - `system.stateVersion` **zkopíruj z `/etc/nixos/configuration.nix` notebooku**, ne z desktopu,
    - vyber moduly.
 5. Ve `flake.nix` odkomentuj nebo přidej `laptop = mkHost "laptop";`
-6. `git add -A && sudo nixos-rebuild switch --flake ~/NixOS#laptop` (poprvé bez aliasů, ty ještě
-   neexistují)
+6. `git add -A && nixos-rebuild switch --flake ~/NixOS#laptop --sudo` (poprvé bez aliasů, ty ještě
+   neexistují; bez `sudo` na začátku, aby se soukromý input stahoval s tvým SSH klíčem)
 7. Doinstaluj věci mimo config (Claude Code: `curl -fsSL https://claude.ai/install.sh | bash`).
 
 ---

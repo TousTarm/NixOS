@@ -1,6 +1,6 @@
 # Desktop: věci specifické pro tenhle konkrétní počítač (hardware, bootloader, GPU)
 # a výběr modulů, které na něm chceme.
-{ ... }: {
+{ inputs, ... }: {
   imports = [
     ./hardware-configuration.nix   # generuje nixos-generate-config, needitovat
     ../../modules/core             # základ pro všechny počítače
@@ -12,6 +12,7 @@
     ../../modules/android.nix
     ../../modules/ai.nix
     ../../modules/school.nix
+    inputs.work.nixosModules.default  # soukromá část (TousTarm/nixos-work)
   ];
 
   networking.hostName = "nixos";  # změna na "desktop" (8. 10.) se kryla s problémy při přihlášení, proto zpět
