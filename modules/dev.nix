@@ -10,5 +10,6 @@
     nodejs_22
     postgresql  # kvůli klientovi psql
     python3
+    gh          # GitHub CLI
   ];
 }
