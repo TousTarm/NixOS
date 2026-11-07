@@ -19,6 +19,7 @@
     in {
       nixosConfigurations = {
         desktop = mkHost "desktop";
+        pc2     = mkHost "pc2";
         # laptop  = mkHost "laptop";   # viz GUIDE.md -> "Nový počítač"
       };
     };

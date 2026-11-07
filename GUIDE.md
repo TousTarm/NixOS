@@ -46,9 +46,10 @@ flake.lock                    zamčené verze nixpkgs a unstable (needitovat ru�
 RULES.md                      pravidla (jen commitnutý config, nic nedodělaného); CLAUDE.md je načítá
 TODO.md                       nedodělané věci a dočasná řešení
 hosts/
-  desktop/
+  desktop/                    Ryzen + RTX 3080 Ti
     default.nix               tenhle počítač: boot, GPU, hardwarové fixy + VÝBĚR MODULŮ
     hardware-configuration.nix vygenerované (disky, kernel moduly), needitovat
+  pc2/                        i7-12700K + RTX 3060 Ti (stejná struktura)
 modules/
   core/                       základ pro VŠECHNY počítače
     default.nix                 importuje zbytek složky
@@ -273,7 +274,9 @@ V `modules/core/shell.nix`:
 
 ### Není ideální ⚠️
 Konkrétní úkoly jsou v [TODO.md](TODO.md).
-- **Hostname `nixos` ≠ jméno configu `desktop`.** Aliasy to obchází přes `-H desktop`.
+- **Hostname je na všech počítačích `nixos`** (záměrně), takže se nedá poznat, který config
+  patří kterému počítači. Aliasy to řeší přes `-H <config>`. Bez aliasů (např. poprvé) vždy piš
+  `--flake ~/NixOS#<config>` (`desktop`, `pc2`, ...).
 - **Git a rebuild nikdy pod `sudo`.** Soubory v `~/NixOS` pak patří rootovi a nejde do nich
   zapisovat (stalo se 11. 10.). `rebuild` si o heslo řekne sám.
 - **Párování složek v Nextcloudu není v configu.** Na novém počítači se musí naklikat znovu.
