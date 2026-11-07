@@ -63,7 +63,7 @@ modules/
   personal.nix                osobní věci, složka Projects
   nextcloud.nix               Nextcloud klient + volba nextcloud.folders (importují ho personal/school)
   gaming.nix                  Steam, Heroic, CurseForge
-  dev.nix                     git, gh, node, psql, python
+  dev.nix                     git, gh, node, psql, python, ethtool
   ai.nix                      Claude Code (podpora), Antigravity, Cursor (z unstable)
   school.nix                  Oxygen XML Editor, složka School
 pkgs/                         vlastní balíčky (co není v nixpkgs)

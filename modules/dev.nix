@@ -11,5 +11,6 @@
     postgresql  # kvůli klientovi psql
     python3
     gh          # GitHub CLI
+    ethtool     # info a nastavení síťových karet (rychlost linky, Wake-on-LAN)
   ];
 }
