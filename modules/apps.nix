@@ -12,5 +12,6 @@
     libreoffice-qt6-fresh   # Qt verze ladí s KDE Plasma
     hunspell
     hunspellDicts.cs_CZ     # česká kontrola pravopisu v LibreOffice
+    prusa-slicer            # slicer pro 3D tisk
   ];
 }
