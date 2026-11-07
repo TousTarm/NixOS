@@ -11,3 +11,7 @@ Nedodělané věci a dočasná řešení (viz [RULES.md](RULES.md)). Hotové pol
 - [ ] **Sjednotit hostname na `desktop`?** Vrácen na `nixos` kvůli problému s přihlášením 8. 10.
       Pozor: změna hostname může rozbít Chromium/Electron aplikace (viz GUIDE.md).
 - [ ] **Ověřit, jestli je potřeba `services.xserver.enable`** (Plasma běží na Waylandu).
+- [ ] **Tiskárna Epson WF-C5710 přidaná ručně** (`lpadmin`, IPP Everywhere, `ipp://192.168.3.64/ipp/print`)
+      jen na tomhle PC. Převést do configu: buď `hardware.printers.ensurePrinters`
+      (potřebuje pevnou IP v routeru), nebo Avahi (`services.avahi.enable` + `nssmdns4`),
+      aby ji všechna 3 PC našla sama. Pak ruční tiskárnu smazat (`lpadmin -x Epson_WF-C5710`).
