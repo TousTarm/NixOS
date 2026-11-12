@@ -50,6 +50,7 @@ hosts/
     default.nix               tenhle počítač: boot, GPU, hardwarové fixy + VÝBĚR MODULŮ
     hardware-configuration.nix vygenerované (disky, kernel moduly), needitovat
   pc2/                        i7-12700K + RTX 3060 Ti (stejná struktura)
+    windows-boot.nsh          EFI Shell skript: najde EFI oddíl s Windows a spustí je
 modules/
   core/                       základ pro VŠECHNY počítače
     default.nix                 importuje zbytek složky

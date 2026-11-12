@@ -1,6 +1,6 @@
 # PC2: i7-12700K + RTX 3060 Ti, Windows na druhém disku.
 # Věci specifické pro tenhle konkrétní počítač (hardware, bootloader, GPU) a výběr modulů.
-{ inputs, ... }: {
+{ inputs, pkgs, ... }: {
   imports = [
     ./hardware-configuration.nix   # generuje nixos-generate-config, needitovat
     ../../modules/core             # základ pro všechny počítače
@@ -24,14 +24,21 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Windows je na druhém disku s vlastním EFI oddílem, systemd-boot ho sám nenajde.
-  # Položka v menu ho spustí přes EFI Shell. Kdyby nefungovala, vyber v menu "EFI Shell",
-  # spusť `map -c` a pak `ls FS0:\EFI`, `ls FS1:\EFI`, ... Kde je složka Microsoft,
-  # to FSx napiš sem. (Zapojený USB flash disk může čísla posunout.)
+  # Položka "Windows" spustí EFI Shell, který si sám přečte startup.nsh ze své složky
+  # (windows-boot.nsh) a ten projde FS0..FS9 a spustí Windows tam, kde je najde.
+  # Pevné číslo (efiDeviceHandle = "FS0") nefungovalo, čísla FSx se mezi starty mění.
+  # Ruční hledání: v menu "EFI Shell", `map -c`, pak `ls FS0:\EFI`, `ls FS1:\EFI`, ...
   boot.loader.systemd-boot.edk2-uefi-shell.enable = true;
-  boot.loader.systemd-boot.windows."11" = {
-    title = "Windows";
-    efiDeviceHandle = "FS0";
+  boot.loader.systemd-boot.extraFiles = {
+    "efi/windows-boot/shell.efi" = "${pkgs.edk2-uefi-shell}/shell.efi";
+    "efi/windows-boot/startup.nsh" = ./windows-boot.nsh;
   };
+  boot.loader.systemd-boot.extraEntries."windows.conf" = ''
+    title Windows
+    efi /efi/windows-boot/shell.efi
+    options -nointerrupt -nomap -noversion
+    sort-key windows
+  '';
 
   # GPU: RTX 3060 Ti (monitory jsou zapojené do ní, integrovaná Intel grafika se nepoužívá)
   services.xserver.videoDrivers = [ "nvidia" ];
