@@ -12,5 +12,7 @@
     python3
     gh          # GitHub CLI
     ethtool     # info a nastavení síťových karet (rychlost linky, Wake-on-LAN)
+    nmap        # skenování sítě a portů
+    arp-scan    # rychlý výpis zařízení v lokální síti (spouštět přes sudo)
   ];
 }
